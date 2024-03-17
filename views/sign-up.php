@@ -60,7 +60,7 @@
                   <button class="btn btn-primary d-grid w-100" type="submit">Sign up</button>
                 </div>
                 <div class="col-md-6">
-                  <button type="button" class="btn btn-secondary d-grid w-100" onclick="return window.history.back()">Cancel</button>
+                  <button type="button" class="btn btn-secondary d-grid w-100" onclick="handleGoBackToPublicPage()">Cancel</button>
                 </div>
               </div>
             </form>
@@ -81,6 +81,10 @@
 </body>
 <?php include("../components/footer.php") ?>
 <script>
+  const handleGoBackToPublicPage = () => {
+    window.location.href = '<?= SERVER_NAME . "/public/views/home" ?>'
+  }
+
   $("#form-sign-up").on("submit", function(e) {
     e.preventDefault()
     swal.showLoading()
