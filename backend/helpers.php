@@ -451,7 +451,7 @@ class Helpers
           if ($query) {
             return $this->conn->insert_id;
           } else {
-            $error =  $this->con->error;
+            $error =  $this->conn->error;
           }
         }
 
