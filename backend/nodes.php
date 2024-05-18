@@ -1248,7 +1248,7 @@ function register_company()
         "industry_id" => $industry,
         "name" => $company_name,
         "company_logo" => $company_logo->success ? $company_logo->file_name : $url_company_logo,
-        "address" => $address,
+        "district" => $address,
         "description" => $description,
       );
 
