@@ -6,7 +6,7 @@ if (!isset($_SESSION["id"])) {
 }
 
 $LOGIN_USER = $helpers->get_user_by_id($_SESSION["id"]);
-$pageName = "Hired";
+$pageName = "Employees List";
 ?>
 <!DOCTYPE html>
 
@@ -47,6 +47,8 @@ $pageName = "Hired";
                       <th>Applicant Name</th>
                       <th class="text-start">Date Applied</th>
                       <th class="text-start">Hired Date</th>
+                      <th class="text-start">Separation Date</th>
+                      <th>Employment Status</th>
                       <th>Actions</th>
                     </tr>
                   </thead>
@@ -55,7 +57,7 @@ $pageName = "Hired";
                     $jobs = $helpers->select_all_with_params("job", "company_id='$LOGIN_USER->company_id'");
                     if (count($jobs) > 0) :
                       foreach ($jobs as $job) :
-                        $applicants = $helpers->select_all_with_params("candidates", "job_id='$job->id' AND status='Hired'");
+                        $applicants = $helpers->select_all_with_params("candidates", "job_id='$job->id' AND status IN('Hired', 'Terminated', 'Resigned')");
 
                         if (count($applicants) == 0) continue;
 
@@ -70,8 +72,20 @@ $pageName = "Hired";
                             <td><?= $job->title ?></td>
                             <td><?= $job->type ?></td>
                             <td><?= $helpers->get_full_name($applicant->user_id); ?></td>
-                            <td class="text-start"><?= date("Y-m-d H:i:s", strtotime($applicant->date_applied)) ?></td>
-                            <td class="text-start"><?= date("Y-m-d H:i:s", strtotime($applicant->date_modified)) ?></td>
+                            <td class="text-start"><?= date("Y-m-d", strtotime($applicant->date_applied)) ?></td>
+                            <td class="text-start"><?= date("Y-m-d", strtotime($applicant->date_hired)) ?></td>
+                            <td class="text-start"><?= $applicant->date_separated ?  date("Y-m-d", strtotime($applicant->date_separated)) : "<em>----</em>" ?></td>
+                            <td>
+                              <?php
+                              $statusColor = "success";
+                              if ($applicant->status == "Terminated") {
+                                $statusColor = "warning";
+                              } else if ($applicant->status == "Resigned") {
+                                $statusColor = "danger";
+                              }
+                              ?>
+                              <span class="badge bg-label-<?= $statusColor ?> me-1"><?= $applicant->status ?></span>
+                            </td>
                             <td>
                               <div class="dropdown">
 
@@ -85,12 +99,22 @@ $pageName = "Hired";
                                   </button>
 
                                   <button type="button" class="dropdown-item" onclick='handleOpenModal(`<?= SERVER_NAME . "/public/views/preview-profile?id=$applicant->user_id" ?>`)'>
-                                    Preview Applicant Profile
+                                    Preview Profile
                                   </button>
 
-                                  <button type="button" class="dropdown-item" onclick='handleRate(`<?= $applicant->user_id ?>`, `<?= $helpers->get_full_name($applicant->user_id) ?>`)'>
-                                    Rate
-                                  </button>
+                                  <?php if ($applicant->status == "Terminated" || $applicant->status == "Resigned") : ?>
+                                    <button type="button" class="dropdown-item" onclick='handleRate(`<?= $applicant->user_id ?>`, `<?= $helpers->get_full_name($applicant->user_id) ?>`)'>
+                                      Rate
+                                    </button>
+                                  <?php else : ?>
+                                    <button type="button" class="dropdown-item" onclick='handleChangeStatus(`<?= $applicant->id ?>`, `Terminated`)'>
+                                      Set Terminated
+                                    </button>
+
+                                    <button type="button" class="dropdown-item" onclick='handleChangeStatus(`<?= $applicant->id ?>`, `Resigned`)'>
+                                      Set Resigned
+                                    </button>
+                                  <?php endif; ?>
                                 </div>
                               </div>
                             </td>
@@ -137,6 +161,23 @@ $pageName = "Hired";
 <?php include("../components/footer.php") ?>
 
 <script>
+  function handleChangeStatus(candidateId, action) {
+    swal.showLoading()
+    $.post("<?= SERVER_NAME . "/backend/nodes?action=application_status_save" ?>", {
+      candidate_id: candidateId,
+      action: action
+    }, (data, status) => {
+      const resp = JSON.parse(data);
+
+      swal.fire({
+        title: resp.success ? "Success" : "Error",
+        html: resp.message,
+        icon: resp.success ? "success" : "error",
+      }).then(() => resp.success ? window.location.reload() : undefined)
+
+    });
+  }
+
   function nl2br(str, is_xhtml) {
     var breakTag = (is_xhtml || typeof is_xhtml === 'undefined') ? '<br />' : '<br>';
     return (str + '').replace(/([^>\r\n]?)(\r\n|\n\r|\r|\n)/g, '$1' + breakTag + '$2');
@@ -200,7 +241,7 @@ $pageName = "Hired";
       }).then((d) => {
         swal.close();
         swal.showLoading();
-        
+
         if (d.isConfirmed) {
           const applicantId = $(`#applicant_id_${id}`).val()
           const rating = $(`#selected_rating_${id}`).val()
