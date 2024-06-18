@@ -47,7 +47,6 @@ $pageName = "Company Verification";
                       <th>Address</th>
                       <th>Verification</th>
                       <th>Date Created</th>
-                      <th>Actions</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -58,7 +57,7 @@ $pageName = "Company Verification";
                       foreach ($companies as $company) :
                         $verificationData = $helpers->select_all_individual("verification", "id='$company->verification_id'");
 
-                        if ($verificationData && $verificationData->status != "pending") continue;
+                        if ($verificationData) continue;
 
                         $modal_id = "company-img-modal_$company->id";
                         $img_id = "company-image_$company->id";
@@ -76,14 +75,19 @@ $pageName = "Company Verification";
                           <td><?= $industryData ? $industryData->name : $NA ?></td>
                           <td><?= $company->district ?></td>
                           <td>
-                            <span class="badge bg-label-warning me-1">Pending</span>
+                            <?php if ($company->verification_id) : ?>
+                              <?php
+                              if ($verificationData->status == "pending") :
+                              ?>
+                                <span class="badge bg-label-warning me-1">Pending</span>
+                              <?php else : ?>
+                                <span class="badge bg-label-success me-1">Approved</span>
+                              <?php endif; ?>
+                            <?php else : ?>
+                              <span class="badge bg-label-danger me-1">No Verification</span>
+                            <?php endif; ?>
                           </td>
                           <td><?= date("m-d-Y", strtotime($company->date_created)) ?></td>
-                          <td>
-                            <button type="button" class="btn btn-primary btn-sm" onclick='return window.location.href =`<?= SERVER_NAME . "/views/admin/company-profile?id=$company->id&&verify" ?>`'>
-                              View
-                            </button>
-                          </td>
                         </tr>
 
                         <?= $helpers->generate_modal_img($modal_id, $img_id, $caption_id) ?>
