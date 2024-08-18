@@ -22,11 +22,11 @@ class Helpers
     $this->session = $session;
 
     if ($_SERVER['HTTP_HOST'] == "localhost") {
-      define("SERVER_NAME", "http://$_SERVER[SERVER_NAME]/job-portal");
+      define("SERVER_NAME", "https://$_SERVER[SERVER_NAME]/job-portal");
     } else if (str_contains($_SERVER['HTTP_HOST'], "ngrok-free.app")) {
       define("SERVER_NAME", "https://$_SERVER[SERVER_NAME]/job-portal");
     } else {
-      define("SERVER_NAME", "http://$_SERVER[SERVER_NAME]");
+      define("SERVER_NAME", "https://$_SERVER[SERVER_NAME]");
     }
   }
 

@@ -3,13 +3,19 @@ session_start();
 date_default_timezone_set("Asia/Manila");
 
 include(__DIR__ . "/helpers.php");
-include(__DIR__ . "/ClassSendEmail.php");
 
 try {
-  $host = "localhost";
-  $user = "root";
-  $password = "";
-  $db = "job_portal";
+  if ($_SERVER['HTTP_HOST'] == "localhost") {
+    $host = "localhost";
+    $user = "root";
+    $password = "";
+    $db = "job-portal";
+  } else {
+    $host = "localhost";
+    $user = "job_user";
+    $password = "j)r[d-2~3!Qn";
+    $db = "job_portal";
+  }
 
   $conn = new mysqli($host, $user, $password, $db);
   $helpers = new Helpers($conn, $_SESSION);
@@ -150,6 +156,8 @@ try {
 
 function sendEmail($email, $body, $name, $subject)
 {
+  include(__DIR__ . "/ClassSendEmail.php");
+  
   $sendSmtp = new SendEmail($email, $body, $name, $subject);
 
   $success = $sendSmtp->response["success"];
