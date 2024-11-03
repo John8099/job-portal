@@ -160,7 +160,7 @@ $pageName = "Applicants";
           <div class="row g-2">
             <div class="col mb-0">
               <label for="time_from" class="form-label">From</label>
-              <input type="time" id="time_from" name="time_from" class="form-control" min="<?= date("H:i") ?>" placeholder="hh:mm" required />
+              <input type="time" id="time_from" name="time_from" class="form-control" placeholder="hh:mm" required />
             </div>
             <div class="col mb-0">
               <label for="time_to" class="form-label">To</label>
@@ -186,10 +186,6 @@ $pageName = "Applicants";
 <?php include("../components/footer.php") ?>
 
 <script>
-  $("#time_from").on("blur", function(e) {
-    $("#time_to").attr("min", e.target.value)
-  })
-
   $("#form-set-interview").on("submit", function(e) {
     e.preventDefault();
 

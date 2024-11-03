@@ -624,8 +624,8 @@ function set_interview()
     $html_body = str_replace('%date%', date("F d, Y", strtotime($interview_date)), $html_body);
     $html_body = str_replace('%time%', date("h:i A", strtotime($time_from)) . " - " . date("h:i A", strtotime($time_to)), $html_body);
 
-    // sendEmail($applicant_data->email, $html_body, $helpers->get_full_name($applicant_data->id), $subject);
-    sendEmail("montemarjohn66@gmail.com", $html_body, $helpers->get_full_name($applicant_data->id), $subject);
+    sendEmail($applicant_data->email, $html_body, $helpers->get_full_name($applicant_data->id), $subject);
+    // sendEmail("montemarjohn66@gmail.com", $html_body, $helpers->get_full_name($applicant_data->id), $subject);
   }
 
   $candidateData = array(
