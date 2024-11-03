@@ -134,7 +134,7 @@ $pageName = "Dashboard";
                               <a href="javascript:void(0)" class="dropdown-item">
                                 <div class="form-check">
                                   <input class="form-check-input" type="checkbox" id="industry_<?= $i ?>" value="<?= $industries[$i]->name ?>" <?= $i < 5 ? "checked" : "" ?>>
-                                  <label class="form-check-label" for="industry_<?= $i ?>"> <?= $industries[$i]->name . " " . ($industries[$i]->count) ?> </label>
+                                  <label class="form-check-label" for="industry_<?= $i ?>"> <?= $industries[$i]->name . " (" . ($industries[$i]->count). ")" ?> </label>
                                 </div>
                               </a>
                             </li>

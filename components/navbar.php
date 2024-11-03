@@ -11,21 +11,21 @@
       <div class="nav-item d-flex align-items-center">
         <?php
         $forecastStr = "SELECT 
-                              com.name as 'company_name',
-                              COUNT(*) as 'count',
-                              c.date_separated
-                          FROM users u 
-                          INNER JOIN candidates c
-                          ON c.user_id = u.id
-                          LEFT JOIN job j
-                          ON j.id = c.job_id
-                          INNER JOIN company com
-                          ON com.id = j.company_id
-                          WHERE u.role = 'applicant'
-                          AND c.status = 'Resigned'
-                          GROUP BY com.name
-                          ORDER BY c.date_separated DESC
-                          LIMIT 1";
+                          com.name as 'company_name',
+                          COUNT(com.name) as 'count',
+                          c.date_separated
+                        FROM users u 
+                        INNER JOIN candidates c
+                        ON c.user_id = u.id
+                        LEFT JOIN job j
+                        ON j.id = c.job_id
+                        INNER JOIN company com
+                        ON com.id = j.company_id
+                        WHERE u.role = 'applicant'
+                        AND c.status = 'Resigned'
+                        GROUP BY com.name
+                        ORDER BY COUNT(com.name) DESC, c.date_separated DESC
+                        LIMIT 1";
 
         $forecastQ = $conn->query($forecastStr);
 
