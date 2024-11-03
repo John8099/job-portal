@@ -58,10 +58,10 @@ class Helpers
             "icon" => "bx bxs-group",
             "is_dropdown" => true,
             "dropdown_data" => array(
-              // array(
-              //   "title" => "Admins",
-              //   "url" => (SERVER_NAME . "/views/admin/admins")
-              // ),
+              array(
+                "title" => "Hired",
+                "url" => (SERVER_NAME . "/views/admin/hired")
+              ),
               array(
                 "title" => "Employers",
                 "url" => (SERVER_NAME . "/views/admin/employers")
