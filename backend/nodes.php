@@ -734,8 +734,7 @@ function set_interview()
     $html_body = str_replace('%yes_action%', (SERVER_NAME . "/public/accept_invitation?i=$encrypted_id&a=$encrypted_yes"), $html_body);
     $html_body = str_replace('%no_action%', (SERVER_NAME . "/public/accept_invitation?i=$encrypted_id&a=$encrypted_no"), $html_body);
 
-    // sendEmail($applicant_data->email, $html_body, $helpers->get_full_name($applicant_data->id), $subject);
-    sendEmail("montemarjohn66@gmail.com", $html_body, $helpers->get_full_name($applicant_data->id), $subject);
+    sendEmail($applicant_data->email, $html_body, $helpers->get_full_name($applicant_data->id), $subject);
   }
 
   $candidateData = array(
