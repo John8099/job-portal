@@ -60,8 +60,8 @@ $pageName = "Posted Jobs";
                       <th>Title</th>
                       <th>Job Type</th>
                       <th>Status</th>
-                      <th class="text-start">List of Candidates</th>
-                      <th class="text-start">Potential Candidates</th>
+                      <th class="text-start">Applied Candidates</th>
+                      <th class="text-start">Qualified Candidates</th>
                       <th>Actions</th>
                     </tr>
                   </thead>
@@ -79,7 +79,10 @@ $pageName = "Posted Jobs";
                         if ($job->qualifications) $post_qualification = json_decode($job->qualifications, true);
                         if ($job->experience) $post_experience = json_decode($job->experience, true);
 
-                        $qualificationArray = array_merge($post_qualification, $post_experience);
+                        $qualificationArray = array_merge(
+                          $post_qualification ? $post_qualification : [],
+                          $post_experience ? $post_experience : []
+                        );
 
                         $qualifications = array();
 
@@ -152,17 +155,13 @@ $pageName = "Posted Jobs";
                               </button>
 
                               <div class="dropdown-menu" aria-labelledby="<?= $btnDropDownId ?>" data-bs-popper="none">
-                                <a class="dropdown-item" href="<?= SERVER_NAME . "/views/edit-job?id=$job->id" ?>">
+                                <button class="dropdown-item" onclick='window.location.href = `<?= SERVER_NAME . "/views/edit-job?id=$job->id" ?>`' <?= $candidateCount > 0 ? "disabled" : "" ?>>
                                   Edit Job Post
-                                </a>
+                                </button>
                                 <button type="button" class="dropdown-item" onclick='handleOpenModal(`<?= SERVER_NAME . "/public/views/preview-job?id=$job->id" ?>`)'>
                                   Preview
                                 </button>
-
-
-
                                 <?php if ($job->status == "active") : ?>
-
                                   <button class="dropdown-item" type="button" onclick="handleSaveStatus('<?= $job->id ?>', 'inactive')">
                                     Set Inactive
                                   </button>

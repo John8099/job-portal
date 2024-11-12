@@ -2,22 +2,10 @@
 session_start();
 date_default_timezone_set("Asia/Manila");
 
-include(__DIR__ . "/helpers.php");
+require(__DIR__ . "/conn.php");
+require(__DIR__ . "/helpers.php");
 
 try {
-  if ($_SERVER['HTTP_HOST'] == "localhost") {
-    $host = "localhost";
-    $user = "root";
-    $password = "";
-    $db = "job_portal";
-  } else {
-    $host = "localhost";
-    $user = "job_user";
-    $password = "j)r[d-2~3!Qn";
-    $db = "job_portal";
-  }
-
-  $conn = new mysqli($host, $user, $password, $db);
   $helpers = new Helpers($conn, $_SESSION);
 
   if (isset($_GET["action"])) {
@@ -140,6 +128,15 @@ try {
       case "validate_otp":
         validate_otp();
         break;
+      case "invitation_confirmation":
+        invitation_confirmation();
+        break;
+      case "remove_certificate":
+        remove_certificate();
+        break;
+      case "add_certificate":
+        add_certificate();
+        break;
       default:
         $response["success"] = false;
         $response["message"] = "Case action not found!";
@@ -151,6 +148,108 @@ try {
 } catch (Exception $e) {
   $response["success"] = false;
   $response["message"] = $e->getMessage();
+  $helpers->return_response($response);
+}
+
+function add_certificate()
+{
+  global $helpers, $_POST, $conn;
+
+  $id = $helpers->decrypt($_POST["token"]);
+  $title = $_POST["title"];
+
+  $input_cert = $_FILES["input_cert"];
+  $url_cert = $_POST["url_cert"];
+
+  $path = "../uploads/certificates";
+  $cert = $helpers->upload_file($input_cert, $path);
+
+  $certData = array(
+    "user_id" => $id,
+    "title" => $title,
+    "cert" => $cert->success ?  SERVER_NAME . "/uploads/certificates/$cert->file_name" : $url_cert,
+  );
+
+  $cert_id = $helpers->insert("certificates", $certData);
+
+  if ($cert_id) {
+    $response["success"] = true;
+    $response["message"] = "Certificate successfully uploaded.";
+  } else {
+    $response["success"] = false;
+    $response["message"] = $conn->error;
+  }
+
+  $helpers->return_response($response);
+}
+
+function remove_certificate()
+{
+  global $helpers, $_POST, $conn;
+
+  $id = $_POST["id"];
+
+  $comGetCert = $conn->query("SELECT id, `cert` FROM certificates WHERE id = '$id'");
+
+  if ($comGetCert->num_rows) {
+    $certData = $comGetCert->fetch_object();
+
+    $deleteComm = $conn->query("DELETE FROM certificates WHERE id='$id'");
+
+    if ($deleteComm) {
+      if ($certData->cert) {
+        $certFile = str_replace(SERVER_NAME, "..", $certData->cert);
+
+        if (file_exists($certFile)) {
+          unlink($certFile);
+        }
+      }
+
+      $response["success"] = true;
+    } else {
+      $response["success"] = false;
+      $response["message"] = $conn->error;
+    }
+  } else {
+    $response["success"] = false;
+    $response["message"] = "Error removing certificate";
+  }
+
+  $helpers->return_response($response);
+}
+
+function invitation_confirmation()
+{
+  global $helpers, $_POST, $conn;
+
+  $id = $helpers->decrypt($_POST["id"]);
+  $action = $helpers->decrypt($_POST["action"]);
+
+  $confirmationData = $helpers->select_all_individual("candidates", "id=$id");
+
+  if ($confirmationData->invitation_confirmation == "yes") {
+    $response["success"] = false;
+    $response["message"] = "You already responded to the interview confirmation.<br>Please wait for further instructions.";
+  } else {
+    $updateData = array(
+      "invitation_confirmation" => $action
+    );
+
+    $up = $helpers->update("candidates", $updateData, "id", $id);
+
+    if ($up) {
+      $response["success"] = true;
+      if ($action == "yes") {
+        $response["message"] = "Interview confirmation successfully confirm.";
+      } else {
+        $response["message"] = "Interview confirmation set to not available for the scheduled interview";
+      }
+    } else {
+      $response["success"] = false;
+      $response["message"] = $conn->error;
+    }
+  }
+
   $helpers->return_response($response);
 }
 
@@ -527,7 +626,9 @@ function application_status_save()
       $data["work_from"] = date("F Y");
       $data["work_to"] = "Present";
 
-      func_add_work_experience($data);
+      $conn->query("UPDATE candidates SET `status`='Withdrawn' WHERE user_id='$candidateData->user_id' AND `status`='Applied'");
+
+      func_add_work_experience($data, true);
     } else if ($action == "Not selected by employer") {
       $response["message"] = "Applicant successfully set to Not Selected";
     } else if ($action == "Withdrawn") {
@@ -545,7 +646,7 @@ function application_status_save()
 
       $data["work_to"] = date("F Y");
 
-      func_add_work_experience($data);
+      func_add_work_experience($data, true);
     }
   } else {
     $response["success"] = false;
@@ -555,7 +656,7 @@ function application_status_save()
   $helpers->return_response($response);
 }
 
-function func_add_work_experience($postData)
+function func_add_work_experience($postData, $auto = false)
 {
   global $helpers;
 
@@ -574,7 +675,8 @@ function func_add_work_experience($postData)
     "company_id" => $company_id,
     "industry_id" => $industry_id,
     "work_from" => $work_from,
-    "work_to" => $work_to
+    "work_to" => $work_to,
+    "is_automatic" => $auto ? "1" : "set_zero"
   );
 
   if ($workExp) {
@@ -602,6 +704,7 @@ function set_interview()
   $time_from = $_POST["time_from"];
   $time_to = $_POST["time_to"];
 
+
   $subject = "";
   $html_body = "";
 
@@ -624,8 +727,15 @@ function set_interview()
     $html_body = str_replace('%date%', date("F d, Y", strtotime($interview_date)), $html_body);
     $html_body = str_replace('%time%', date("h:i A", strtotime($time_from)) . " - " . date("h:i A", strtotime($time_to)), $html_body);
 
-    sendEmail($applicant_data->email, $html_body, $helpers->get_full_name($applicant_data->id), $subject);
-    // sendEmail("montemarjohn66@gmail.com", $html_body, $helpers->get_full_name($applicant_data->id), $subject);
+    $encrypted_id = $helpers->encrypt($candidate_id);
+    $encrypted_yes = $helpers->encrypt("yes");
+    $encrypted_no = $helpers->encrypt("no");
+
+    $html_body = str_replace('%yes_action%', (SERVER_NAME . "/public/accept_invitation?i=$encrypted_id&a=$encrypted_yes"), $html_body);
+    $html_body = str_replace('%no_action%', (SERVER_NAME . "/public/accept_invitation?i=$encrypted_id&a=$encrypted_no"), $html_body);
+
+    // sendEmail($applicant_data->email, $html_body, $helpers->get_full_name($applicant_data->id), $subject);
+    sendEmail("montemarjohn66@gmail.com", $html_body, $helpers->get_full_name($applicant_data->id), $subject);
   }
 
   $candidateData = array(

@@ -48,9 +48,9 @@ $pageName = "List of Candidates in $job->title";
                 <table id="applicants-table" class="table table-striped nowrap">
                   <thead>
                     <tr>
+                      <th>Applicant Name</th>
                       <th>Title</th>
                       <th class="text-start">Date Applied</th>
-                      <th>Applicant Name</th>
                       <th>Actions</th>
                     </tr>
                   </thead>
@@ -61,12 +61,11 @@ $pageName = "List of Candidates in $job->title";
                       $btnDropDownId = "btn-dropdown-$job->id";
                     ?>
                       <tr>
+                        <td><?= $helpers->get_full_name($applicant->user_id); ?></td>
                         <td><?= $job->title ?></td>
                         <td class="text-start"><?= date("Y-m-d H:i:s", strtotime($applicant->date_applied)) ?></td>
-                        <td><?= $helpers->get_full_name($applicant->user_id); ?></td>
                         <td>
                           <div class="dropdown">
-
                             <button class="btn btn-default rounded-circle" type="button" id="<?= $btnDropDownId ?>" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                               <i class='bx bx-dots-vertical-rounded' data-bs-toggle="tooltip" data-placement="top" title="More"></i>
                             </button>

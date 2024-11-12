@@ -53,6 +53,14 @@ class Helpers
           )
         ),
         array(
+          "title" => "Forecasting",
+          "config" => array(
+            "icon" => "bx bx-line-chart",
+            "url" => (SERVER_NAME . "/views/admin/forecasting"),
+            "is_dropdown" => false
+          )
+        ),
+        array(
           "title" => "Users",
           "config" => array(
             "icon" => "bx bxs-group",
@@ -157,10 +165,10 @@ class Helpers
           )
         ),
         array(
-          "title" => "Not Selected",
+          "title" => "Rejected",
           "config" => array(
             "icon" => "bx bxs-user-x",
-            "url" => (SERVER_NAME . "/views/not-selected"),
+            "url" => (SERVER_NAME . "/views/rejected"),
             "is_dropdown" => false
           )
         ),

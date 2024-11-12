@@ -6,7 +6,7 @@ if (!isset($_SESSION["id"])) {
 }
 
 $LOGIN_USER = $helpers->get_user_by_id($_SESSION["id"]);
-$pageName = "Not Selected Applicants";
+$pageName = "Rejected Applicants";
 ?>
 <!DOCTYPE html>
 
@@ -41,11 +41,11 @@ $pageName = "Not Selected Applicants";
                 <table id="not-selected-table" class="table table-striped nowrap">
                   <thead>
                     <tr>
+                      <th>Applicant Name</th>
                       <th>Title</th>
                       <th>Job Type</th>
-                      <th>Applicant Name</th>
                       <th class="text-start">Date Applied</th>
-                      <th class="text-start">Date Modified</th>
+                      <th class="text-start">Rejection Date</th>
                       <th>Actions</th>
                     </tr>
                   </thead>
@@ -66,9 +66,9 @@ $pageName = "Not Selected Applicants";
                           $time_to = date("h:i A", strtotime($post_interview_time[1]));
                     ?>
                           <tr>
+                            <td><?= $helpers->get_full_name($applicant->user_id); ?></td>
                             <td><?= $job->title ?></td>
                             <td><?= $job->type ?></td>
-                            <td><?= $helpers->get_full_name($applicant->user_id); ?></td>
                             <td class="text-start"><?= date("Y-m-d H:i:s", strtotime($applicant->date_applied)) ?></td>
                             <td class="text-start"><?= date("Y-m-d H:i:s", strtotime($applicant->date_modified)) ?></td>
                             <td>

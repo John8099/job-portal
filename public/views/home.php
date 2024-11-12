@@ -46,7 +46,7 @@ if (isset($_SESSION["id"])) {
                 </div>
               </div>
               <?php
-              $top5Keywords = $helpers->custom_query("SELECT keywords FROM search_keywords GROUP BY keywords ORDER BY count(*) DESC LIMIT 5");
+              $top5Keywords = $helpers->custom_query("SELECT keywords FROM search_keywords WHERE keywords <> '' GROUP BY keywords ORDER BY count(*) DESC LIMIT 5");
 
               if (count($top5Keywords) > 0) :
               ?>
@@ -349,7 +349,6 @@ if (isset($_SESSION["id"])) {
             <div class="row justify-content-center">
               <div class="col-md-7">
                 <h2 class="section-title mb-2">Company We've Helped</h2>
-                <p class="lead">We collect reviews from our users so you can get an honest opinion of what an experience with our website are really like!</p>
               </div>
             </div>
           </div>

@@ -38,8 +38,18 @@ if (isset($_SESSION["id"])) {
 
     $candidateData = $helpers->select_all_individual("candidates", "user_id='$user_id' AND job_id='$job->id' ORDER BY id DESC LIMIT 1");
 
-    // $disableApplyButton = $candidateData ? "disabled" : "";
-    $disableApplyButton = $candidateData && $candidateData->status != "Withdrawn" ? "disabled" : "";
+    $checkFullTime = $helpers->select_all_with_params("candidates", "user_id='$user_id'");
+    $toDisable = false;
+
+    foreach ($checkFullTime as $stat) {
+      $jobData = $helpers->select_all_individual("job", "id=$stat->job_id");
+
+      if ($stat->status == "Hired" && $jobData->type == "Full time") {
+        $toDisable = true;
+      }
+    }
+
+    $disableApplyButton = ($candidateData && $candidateData->status != "Withdrawn") || $toDisable ? "disabled" : "";
     ?>
     <section class="site-section">
       <div class="container">

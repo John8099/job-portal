@@ -41,11 +41,11 @@ $pageName = "Applicants";
                 <table id="applicants-table" class="table table-striped nowrap">
                   <thead>
                     <tr>
+                      <th>Applicant Name</th>
                       <th>Title</th>
                       <th>Job Type</th>
                       <th class="text-start">Date Applied</th>
                       <th>Status</th>
-                      <th>Applicant Name</th>
                       <th>Actions</th>
                     </tr>
                   </thead>
@@ -62,11 +62,11 @@ $pageName = "Applicants";
                           $btnDropDownId = "btn-dropdown-$job->id";
                     ?>
                           <tr>
+                            <td><?= $helpers->get_full_name($applicant->user_id); ?></td>
                             <td><?= $job->title ?></td>
                             <td><?= $job->type ?></td>
                             <td class="text-start"><?= date("Y-m-d H:i:s", strtotime($applicant->date_applied)) ?></td>
                             <td><?= ucfirst($applicant->status) ?></td>
-                            <td><?= $helpers->get_full_name($applicant->user_id); ?></td>
                             <td>
                               <div class="dropdown">
 
