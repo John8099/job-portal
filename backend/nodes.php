@@ -1015,6 +1015,8 @@ function add_skills()
 
     if (!$skillData) {
       $skill_id = $helpers->insert("skills_list", array("name" => ucwords($skill)));
+    } else {
+      $skill_id = $skillData->id;
     }
   }
 
