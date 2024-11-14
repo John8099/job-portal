@@ -124,11 +124,13 @@ if (isset($_SESSION["id"])) {
                 if ($customQ->num_rows > 0) :
                   $res = $customQ->fetch_object();
                   $job_data = $helpers->select_all_individual("job", "id='$res->id'");
-                  $company_data = $helpers->select_all_individual("company", "id='$job_data->id'");
+                  if ($job_data):
+                    $company_data = $helpers->select_all_individual("company", "id='$job_data->id'");
 
-                  if ($company_data):
+                    if ($company_data):
                 ?>
-                    Affiliated with <strong><?= "$company_data->name " . date("F Y", strtotime($res->date_hired)) ?></strong>
+                      Affiliated with <strong><?= "$company_data->name " . date("F Y", strtotime($res->date_hired)) ?></strong>
+                    <?php endif; ?>
                   <?php endif; ?>
                 <?php endif; ?>
               </div>
