@@ -6,7 +6,7 @@ if (!isset($_SESSION["id"])) {
 }
 
 $LOGIN_USER = $helpers->get_user_by_id($_SESSION["id"]);
-$pageName = "Company Representatives";
+$pageName = "Job Lists";
 ?>
 <!DOCTYPE html>
 
@@ -38,51 +38,49 @@ $pageName = "Company Representatives";
 
             <div class="card">
               <div class="card-body">
-                <table id="employer-table" class="table table-striped nowrap">
+                <table id="job-list-table" class="table table-striped nowrap">
                   <thead>
                     <tr>
                       <th>Avatar</th>
-                      <th>Company name</th>
-                      <th>Full name</th>
-                      <th>Address</th>
-                      <th>Email</th>
-                      <th>Date Created</th>
+                      <th>Job Title</th>
+                      <th>Work Type</th>
+                      <th>Work Setup</th>
+                      <th>Status</th>
+                      <th>Posted Date</th>
                       <th>Actions</th>
                     </tr>
                   </thead>
                   <tbody>
                     <?php
-                    $employers = $helpers->select_all_with_params("users", "role='employer'");
+                    $jobs = $helpers->select_all_with_params("job", "status <> 'inactive'");
 
-                    if (count($employers) > 0) :
-                      foreach ($employers as $employer) :
-                        $companyData = $helpers->select_all_individual("company", "id='$employer->company_id'");
+                    if (count($jobs) > 0) :
+                      foreach ($jobs as $job) :
+                        $companyData = $helpers->select_all_individual("company", "id='$job->company_id'");
 
-                        $modal_id = "employer-img-modal_$employer->id";
-                        $img_id = "employer-image_$employer->id";
-                        $caption_id = "employer-caption_$employer->id";
-
+                        $modal_id = "company-img-modal_$companyData->id";
+                        $img_id = "company-image_$companyData->id";
+                        $caption_id = "company-caption_$companyData->id";
                     ?>
                         <tr>
-                          <td class="td-image">
-                            <?= $helpers->generate_modal_click_avatar($helpers->get_avatar_link($employer->id), $modal_id, $img_id, $caption_id) ?>
+                          <td class="td-image text-center" data-bs-toggle="tooltip" data-bs-placement="top" title="<?= $companyData->name ?>">
+                            <?= $helpers->generate_modal_click_avatar($helpers->get_company_logo_link($companyData->id), $modal_id, $img_id, $caption_id) ?>
                           </td>
-                          <td><?= $companyData->name ?></td>
-                          <td><?= $helpers->get_full_name($employer->id) ?></td>
-                          <td><?= "$employer->address $employer->district" ?></td>
-                          <td><?= $employer->email ?></td>
-                          <td><?= date("m-d-Y", strtotime($employer->date_created)) ?></td>
+                          <td><?= $job->title ?></td>
+                          <td><?= $job->type ?></td>
+                          <td><?= $job->location_type ?></td>
                           <td>
-                            <?php if ($employer->id != $LOGIN_USER->id) : ?>
-                              <button type="button" class="btn btn-primary btn-sm" onclick='return window.location.href =`<?= SERVER_NAME . "/views/profile?id=$employer->id" ?>`'>
-                                View Profile
-                              </button>
-                            <?php else : ?>
-                              ---
-                            <?php endif; ?>
+                            <span class="badge rounded-pill bg-<?= $job->status ? "success" : "danger" ?> px-4">
+                              <?= $job->status ?>
+                            </span>
+                          </td>
+                          <td><?= date("m-d-Y", strtotime($job->date_created)) ?></td>
+                          <td>
+                            <button type="button" class="btn btn-primary btn-sm" onclick='handleOpenModal(`<?= SERVER_NAME . "/public/views/preview-job?id=$job->id" ?>`)'>
+                              View Details
+                            </button>
                           </td>
                         </tr>
-
                         <?= $helpers->generate_modal_img($modal_id, $img_id, $caption_id) ?>
                       <?php endforeach; ?>
                     <?php endif;
@@ -105,13 +103,36 @@ $pageName = "Company Representatives";
   <!-- Overlay -->
   <div class="layout-overlay layout-menu-toggle"></div>
 
+  <div class="modal fade" id="modalPreview" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-xl" role="document">
+      <div class="modal-content" style="height:90vh">
+        <div class="modal-header">
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <div class="row">
+            <div class="col mb-3" style="height: 100%">
+              <iframe src="" id="previewIframe" style="overflow:hidden;overflow-x:hidden;overflow-y:hidden;height:100%;width:100%;position:absolute;top:0px;left:0px;right:0px;bottom:0px" height="100%" width="100%"></iframe>
+            </div>
+          </div>
+
+        </div>
+
+      </div>
+    </div>
+  </div>
 </body>
 
 <?php include("../../components/footer.php") ?>
 
 <script>
+  function handleOpenModal(src) {
+    $("#previewIframe").attr("src", src)
+    $("#modalPreview").modal("show")
+  }
+
   const employerTableCols = [1, 2, 3, 4, 5, 6];
-  const employerTable = $("#employer-table").DataTable({
+  const employerTable = $("#job-list-table").DataTable({
     paging: true,
     lengthChange: true,
     ordering: false,

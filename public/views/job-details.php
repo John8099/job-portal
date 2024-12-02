@@ -136,13 +136,15 @@ if (isset($_SESSION["id"])) {
                   <?php
                   foreach ($qualifications as $qualification) :
                     $skill = $helpers->select_all_individual("skills_list", "id=$qualification");
+                    if ($skill) :
                   ?>
-                    <li class="d-flex align-items-start mb-2">
-                      <span class="icon-check_circle mr-2 text-muted"></span>
-                      <span>
-                        <?= $skill->name ?>
-                      </span>
-                    </li>
+                      <li class="d-flex align-items-start mb-2">
+                        <span class="icon-check_circle mr-2 text-muted"></span>
+                        <span>
+                          <?= $skill->name ?>
+                        </span>
+                      </li>
+                    <?php endif; ?>
                   <?php endforeach; ?>
                 </ul>
               </div>
@@ -203,14 +205,15 @@ if (isset($_SESSION["id"])) {
               <h3 class="text-primary  mt-3 h5 pl-3 mb-3 ">Job Summary</h3>
               <ul class="list-unstyled pl-3 mb-0">
                 <li class="mb-2"><strong class="text-black">Published on:</strong><?= date("M d, Y", strtotime($job->date_created)) ?></li>
-                <li class="mb-2"><strong class="text-black">Job Type:</strong> <?= $job->type ?></li>
+                <li class="mb-2"><strong class="text-black">Work Type:</strong> <?= $job->type ?></li>
                 <li class="mb-2"><strong class="text-black">Experience Level:</strong> <?= $job->experience_level ?></li>
                 <li class="mb-2"><strong class="text-black">Job Location:</strong> <?= $company->district ?></li>
-                <li class="mb-2"><strong class="text-black">Location Type:</strong> <?= $job->location_type ?></li>
+                <li class="mb-2"><strong class="text-black">Work Setup:</strong> <?= $job->location_type ?></li>
                 <li class="mb-2"><strong class="text-black">Salary:</strong> <?= $job->pay ?></li>
               </ul>
             </div>
 
+            <div class="bg-light p-3 border rounded mb-4 d-none" id="mapFrame"></div>
           </div>
         </div>
       </div>
@@ -222,6 +225,31 @@ if (isset($_SESSION["id"])) {
   <?php include("../components/footer.php") ?>
 </body>
 <script>
+  $(document).ready(function() {
+    const mapFrame = `<?= $company->map_frame ? $company->map_frame : "" ?>`;
+    displayMap(mapFrame)
+  });
+
+  function displayMap(val) {
+    if (val) {
+      $("#mapFrame").html("")
+      $("#mapFrame").append(val)
+      $("#mapFrame").removeClass("d-none")
+
+      const iframe = $("#mapFrame").find("iframe")
+      if (iframe.length) {
+        $(iframe).css({
+          "border": "0",
+          "width": "100%",
+          "height": "250px"
+        })
+      }
+    } else {
+      $("#mapFrame").html("")
+      $("#mapFrame").addClass("d-none")
+    }
+  }
+
   function handleApply(userId, jobId) {
     if (!userId) {
       swal.fire({

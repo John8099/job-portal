@@ -221,7 +221,7 @@
                           </a>
                         </h3>
                         <div>
-                          <?= date("F d, Y", strtotime($cert->date_created)) ?>
+                          <?= date("F d, Y", strtotime($cert->date_acquired)) ?>
                         </div>
                       </div>
                     <?php endforeach; ?>

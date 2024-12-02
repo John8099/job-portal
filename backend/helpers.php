@@ -21,12 +21,24 @@ class Helpers
     $this->conn = $conn;
     $this->session = $session;
 
-    if ($_SERVER['HTTP_HOST'] == "localhost") {
-      define("SERVER_NAME", "https://$_SERVER[SERVER_NAME]/job-portal");
-    } else if (str_contains($_SERVER['HTTP_HOST'], "ngrok-free.app")) {
-      define("SERVER_NAME", "https://$_SERVER[SERVER_NAME]/job-portal");
+    $server_request_scheme = "";
+
+    if ((!empty($_SERVER['REQUEST_SCHEME']) && $_SERVER['REQUEST_SCHEME'] == 'https') ||
+      (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] == 'on') ||
+      (!empty($_SERVER['SERVER_PORT']) && $_SERVER['SERVER_PORT'] == '443')
+    ) {
+      $server_request_scheme = 'https';
     } else {
-      define("SERVER_NAME", "https://$_SERVER[SERVER_NAME]");
+      $server_request_scheme = 'http';
+    }
+
+
+    if ($_SERVER['HTTP_HOST'] == "localhost") {
+      define("SERVER_NAME", "$server_request_scheme://$_SERVER[SERVER_NAME]/job-portal");
+    } else if (str_contains($_SERVER['HTTP_HOST'], "ngrok-free.app")) {
+      define("SERVER_NAME", "$server_request_scheme://$_SERVER[SERVER_NAME]/job-portal");
+    } else {
+      define("SERVER_NAME", "$server_request_scheme://$_SERVER[SERVER_NAME]");
     }
   }
 
@@ -71,7 +83,7 @@ class Helpers
                 "url" => (SERVER_NAME . "/views/admin/hired")
               ),
               array(
-                "title" => "Employers",
+                "title" => "Company Representatives",
                 "url" => (SERVER_NAME . "/views/admin/employers")
               ),
               array(
@@ -79,6 +91,14 @@ class Helpers
                 "url" => (SERVER_NAME . "/views/admin/applicants")
               ),
             )
+          )
+        ),
+        array(
+          "title" => "Job Listing",
+          "config" => array(
+            "icon" => "bx bxs-briefcase",
+            "url" => (SERVER_NAME . "/views/admin/job-lists"),
+            "is_dropdown" => false
           )
         ),
         array(
@@ -124,14 +144,14 @@ class Helpers
       );
     } else if ($user == "employer") {
       $links = array(
-        // array(
-        //   "title" => "Dashboard",
-        //   "config" => array(
-        //     "icon" => "bx bxs-home-circle",
-        //     "url" => (SERVER_NAME . "/views/dashboard"),
-        //     "is_dropdown" => false
-        //   )
-        // ),
+        array(
+          "title" => "Dashboard",
+          "config" => array(
+            "icon" => "bx bxs-dashboard",
+            "url" => (SERVER_NAME . "/views/dashboard"),
+            "is_dropdown" => false
+          )
+        ),
         array(
           "title" => "Jobs",
           "config" => array(

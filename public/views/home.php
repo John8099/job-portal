@@ -143,7 +143,26 @@ if (isset($_SESSION["id"])) {
 
             if (count($jobs) > 0) {
               foreach ($jobs as $job) {
-                array_push($jobIds, $job->id);
+                if (!in_array($job->id, $jobIds)) {
+                  array_push($jobIds, $job->id);
+                }
+              }
+            }
+          }
+
+          function addIdsBaseOnIndustry($jobs)
+          {
+            global $helpers;
+
+            if (count($jobs) > 0) {
+              foreach ($jobs as $job) {
+                if ($job->industries) {
+                  $jobIndustries = json_decode($job->industries, true);
+                  foreach ($jobIndustries as $industry_id) {
+                    $jobsByIndustryData = $helpers->select_all_with_params("job", "industries LIKE '%$industry_id%' AND status='active'");
+                    handleAddIds($jobsByIndustryData);
+                  }
+                }
               }
             }
           }
@@ -151,11 +170,15 @@ if (isset($_SESSION["id"])) {
           $jobPreferences = $helpers->select_all_with_params("job_preference", "user_id='$LOGIN_USER->id'");
 
           foreach ($jobPreferences as $jobPreference) {
-
             if ($jobPreference->job_title) {
               foreach (json_decode($jobPreference->job_title, true) as $jobTitle) {
-                $jobs = $helpers->select_all_with_params("job", "LOWER(title) LIKE LOWER('%$jobTitle%') AND status='active'");
-                handleAddIds($jobs);
+                $explodedTitle = explode(" ", $jobTitle);
+
+                foreach ($explodedTitle as $dt) {
+                  $jobs = $helpers->select_all_with_params("job", "LOWER(title) LIKE LOWER('%$dt%') AND status='active'");
+                  handleAddIds($jobs);
+                  addIdsBaseOnIndustry($jobs);
+                }
               }
             }
 
@@ -200,6 +223,15 @@ if (isset($_SESSION["id"])) {
                 $jobs = $helpers->select_all_with_params("job", "LOWER(location_type) LIKE LOWER('%$locationType%') AND status='active'");
                 handleAddIds($jobs);
               }
+            }
+          }
+
+          $workExp = $helpers->select_all_with_params("work_experience", "user_id = '$LOGIN_USER->id'");
+
+          if ($workExp) {
+            foreach($workExp as $exp) {
+              $jobBaseIndustry = $helpers->select_all_with_params("job", "industries LIKE '%$exp->industry_id%' AND status='active'");
+              addIdsBaseOnIndustry($jobs);
             }
           }
 

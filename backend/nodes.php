@@ -157,6 +157,7 @@ function add_certificate()
 
   $id = $helpers->decrypt($_POST["token"]);
   $title = $_POST["title"];
+  $date_acquired = $_POST["acquired"];
 
   $input_cert = $_FILES["input_cert"];
   $url_cert = $_POST["url_cert"];
@@ -167,6 +168,7 @@ function add_certificate()
   $certData = array(
     "user_id" => $id,
     "title" => $title,
+    "date_acquired" => $date_acquired,
     "cert" => $cert->success ?  SERVER_NAME . "/uploads/certificates/$cert->file_name" : $url_cert,
   );
 
@@ -901,6 +903,8 @@ function add_job()
   $location_type = $_POST["location_type"];
   $schedule = $_POST["schedule"];
 
+  $industries = $_POST["industry"];
+
   $min = doubleval(str_replace(",", "", $_POST["min"]));
   $max = doubleval(str_replace(",", "", $_POST["max"]));
   $range = $_POST["range"];
@@ -926,6 +930,22 @@ function add_job()
       }
     } else {
       $post_qualifications[$i] = intval($qualification);
+    }
+  }
+
+  for ($i = 0; $i < count($industries); $i++) {
+    $industry = $industries[$i];
+
+    if (!is_numeric($qualification)) {
+      $industryData = $helpers->select_all_individual("industries", "LOWER(name)=LOWER('$industry')");
+
+      if (!$industryData) {
+        $industry_id = $helpers->insert("industries", array("name" => ucwords($industry)));
+
+        $post_qualifications[$i] = $industry_id;
+      }
+    } else {
+      $industries[$i] = intval($industry);
     }
   }
 
@@ -960,6 +980,7 @@ function add_job()
     "pay" => $pay,
     "benefits" => json_encode($benefits),
     "qualifications" => json_encode($post_qualifications),
+    "qualifications" => json_encode($industries),
     "experience" => json_encode($post_experience),
     "status" => "active"
   );
@@ -1184,8 +1205,8 @@ function add_education()
 
   $id = $helpers->decrypt($_POST["token"]);
   $attainment = $_POST["attainment"];
-  $course = empty($_POST["course"]) ? "set_null" : ucwords($_POST["course"]);
-  $school_name = ucwords($_POST["school_name"]);
+  $course = empty($_POST["course"]) ? "set_null" : ucwords($conn->escape_string($_POST["course"]));
+  $school_name = ucwords($conn->escape_string($_POST["school_name"]));
   $school_year = $_POST["school_year"];
 
   $educationData = array(
@@ -1201,6 +1222,24 @@ function add_education()
   if ($education_id) {
     $response["success"] = true;
     $response["message"] = "Education added successfully";
+
+    if ($_POST["course"] || $_POST["school_name"]) {
+      if ($_POST["school_name"]) {
+        $schoolQ = $conn->query("SELECT * FROM schools WHERE LOWER(`name`)=LOWER('$school_name')");
+
+        if ($schoolQ->num_rows == 0) {
+          $helpers->insert("schools", array("name" => $school_name));
+        }
+      }
+
+      if ($_POST["course"]) {
+        $courseQ = $conn->query("SELECT * FROM courses WHERE LOWER(`title`)=LOWER('$course')");
+
+        if ($courseQ->num_rows == 0) {
+          $helpers->insert("courses", array("title" => $course));
+        }
+      }
+    }
   } else {
     $response["success"] = false;
     $response["message"] = $conn->error;
@@ -1299,6 +1338,8 @@ function company_save()
   $input_business_permit = $_FILES["input_business_permit"];
   $url_business_permit = $_POST["url_business_permit"];
 
+  $mapFrame = nl2br($_POST["mapFrame"]);
+
   $updateData = array();
   $update = false;
 
@@ -1311,7 +1352,8 @@ function company_save()
       "address" => $companyAddress,
       "district" => $companyDistrict,
       "description" => nl2br($description),
-      "industry_id" => $industry_id
+      "industry_id" => $industry_id,
+      "map_frame" => $mapFrame
     );
 
     $update = $helpers->update("company", $updateData, "id", $company_id);
@@ -1335,9 +1377,13 @@ function company_save()
         $updateData = array(
           "verification_id" => $verification_id,
           "name" => $name,
+          "contact" => $contact,
+          "email" => $email,
           "address" => $companyAddress,
+          "district" => $companyDistrict,
           "description" => nl2br($description),
-          "industry_id" => $industry_id
+          "industry_id" => $industry_id,
+          "map_frame" => $mapFrame
         );
 
         $update = $helpers->update("company", $updateData, "id", $company_id);
@@ -1445,6 +1491,8 @@ function register_company()
   $input_business_permit = $_FILES["input_business_permit"];
   $url_business_permit = $_POST["url_business_permit"];
 
+  $mapFrame = nl2br($_POST["mapFrame"]);
+
   $company_id = null;
 
   if (!empty($input_company_id)) {
@@ -1475,6 +1523,7 @@ function register_company()
         "address" => $address,
         "district" => $district,
         "description" => $description,
+        "map_frame" => $mapFrame
       );
 
       $insertCompany = $helpers->insert("company", $companyData);

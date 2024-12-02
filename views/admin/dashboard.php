@@ -76,17 +76,12 @@ $pageName = "Dashboard";
                   <div class="card">
                     <div class="card-body">
                       <?php
-                      $employeesString = "SELECT 
-                                          u.id,
-                                          u.fname,
-                                          u.lname
-                                        FROM users u 
-                                        WHERE u.role='employer'";
+                      $jobs = $helpers->select_all_with_params("job", "status <> 'inactive'");
 
-                      $employeesQ = $conn->query($employeesString);
+                      $jobCount = $jobs ? count($jobs) : 0;
                       ?>
-                      <span class="fw-semibold d-block mb-1">Employers</span>
-                      <h3 class="card-title mb-2 text-center"><?= $employeesQ->num_rows ?></h3>
+                      <span class="fw-semibold d-block mb-1">Available Jobs</span>
+                      <h3 class="card-title mb-2 text-center"><?= $jobCount ?></h3>
                     </div>
                   </div>
                 </a>
