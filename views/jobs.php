@@ -148,9 +148,11 @@ $pageName = "Posted Jobs";
                                   $explodedTitle = explode(" ", $jobTitle);
 
                                   foreach ($explodedTitle as $chunk_title) {
-                                    if (is_numeric(strpos($job->title, $chunk_title))) {
-                                      if (!in_array($dt->id, $potentialUserIds)) {
-                                        array_push($potentialUserIds, $dt->id);
+                                    if ($chunk_title) {
+                                      if (is_numeric(strpos($job->title, $chunk_title))) {
+                                        if (!in_array($dt->id, $potentialUserIds)) {
+                                          array_push($potentialUserIds, $dt->id);
+                                        }
                                       }
                                     }
                                   }
