@@ -366,7 +366,7 @@ if (isset($_SESSION["id"])) {
       </section>
     <?php endif; ?>
 
-    <section class="site-section py-4">
+    <!-- <section class="site-section py-4">
       <div class="container">
         <div class="row align-items-center">
           <div class="col-12 text-center mt-4 mb-5">
@@ -386,7 +386,7 @@ if (isset($_SESSION["id"])) {
           <?php endforeach; ?>
         </div>
       </div>
-    </section>
+    </section> -->
   </div>
 
   <!-- SCRIPTS -->

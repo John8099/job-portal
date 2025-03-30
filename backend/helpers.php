@@ -65,7 +65,7 @@ class Helpers
           )
         ),
         array(
-          "title" => "Projection",
+          "title" => "Projection & Prediction",
           "config" => array(
             "icon" => "bx bx-line-chart",
             "url" => (SERVER_NAME . "/views/admin/projection"),

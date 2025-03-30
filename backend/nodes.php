@@ -146,6 +146,9 @@ try {
       case "get_line_chart":
         get_line_chart();
         break;
+      case "get_forecasting":
+        get_forecasting();
+        break;
       default:
         $response["success"] = false;
         $response["message"] = "Case action not found!";
@@ -158,6 +161,46 @@ try {
   $response["success"] = false;
   $response["message"] = $e->getMessage();
   $helpers->return_response($response);
+}
+
+function get_forecasting()
+{
+  global $helpers, $_POST, $conn;
+
+  // $month = $_POST["month"];
+  // $year = $_POST["year"];
+  $industry_id = $_POST["industry_id"];
+
+  $query = "SELECT 
+              com.name as 'company_name',
+              COUNT(com.name) as 'count',
+              c.date_separated
+            FROM users u 
+            INNER JOIN candidates c
+            ON c.user_id = u.id
+            LEFT JOIN job j
+            ON j.id = c.job_id
+            INNER JOIN company com
+            ON com.id = j.company_id
+            WHERE JSON_CONTAINS(j.industries, '$industry_id', '$')
+            AND u.role = 'applicant'
+            AND c.status = 'Resigned'
+            GROUP BY com.name
+            ORDER BY COUNT(com.name) DESC, c.date_separated DESC";
+  $comm = $conn->query($query);
+
+  $table_data = null;
+
+  while ($row = $comm->fetch_object()) {
+    $table_data .= "<tr>";
+    $table_data .= "<td>$row->company_name</td>";
+    $table_data .= "<td> <strong>$row->count</strong> in the next few weeks/months</td>";
+    $table_data .= "</tr>";
+  }
+
+  $res["table_data"] = $table_data;
+
+  $helpers->return_response($res);
 }
 
 function get_line_chart()
@@ -225,77 +268,71 @@ function get_line_chart()
 
     $query = $conn->query(
       "SELECT 
-          j.title,
-          j.industries,
-          j.date_created
-        FROM job j 
-        WHERE j.date_created BETWEEN '$quarterDate' AND '$lastDateOfMonth'
-        AND JSON_CONTAINS(j.industries, '$industry_id', '$')
-        AND j.status <> 'inactive'"
+        j.title,
+        j.industries,
+        j.date_created
+      FROM candidates c
+      LEFT JOIN job j
+      ON j.id = c.job_id
+      WHERE c.date_applied BETWEEN '$quarterDate' AND '$lastDateOfMonth'
+      AND JSON_CONTAINS(j.industries, '$industry_id', '$')
+      AND j.status <> 'inactive'"
     );
 
     $res["line_data"][$month] = $query->num_rows;
   }
 
   $byYearQ = "SELECT 
-                j.title, 
-                COUNT(j.title) AS 'count', 
-                MAX(j.date_created) AS latest_date
-              FROM job j
-              WHERE YEAR(j.date_created)='$year'
-                AND JSON_CONTAINS(j.industries, '$industry_id', '$')
-                AND j.status <> 'inactive'
-              GROUP BY LOWER(j.title)
-              HAVING COUNT(j.title) = (
-                  SELECT MAX(count) FROM (
-                      SELECT 
-                        COUNT(j.title) AS count
-                      FROM job j
-                      WHERE YEAR(j.date_created)='$year'
-                        AND JSON_CONTAINS(j.industries, '$industry_id', '$')
-                        AND j.status <> 'inactive'
-                      GROUP BY LOWER(j.title)
-                  ) subquery
-              )
-              ORDER BY latest_date DESC LIMIT 1;";
+                sq.title,
+                SUM(sq.count) as 'count'
+              FROM (
+                SELECT 
+                      j.title,
+                      COUNT(j.title) as 'count'
+                  FROM candidates c
+                  LEFT JOIN job j
+                  ON j.id = c.job_id
+                  WHERE YEAR(c.date_applied)='$year'
+                  AND JSON_CONTAINS(j.industries, '$industry_id', '$')
+                  AND j.status <> 'inactive'
+                  GROUP BY j.title
+              )sq";
 
   $byYear = $conn->query($byYearQ);
 
   if ($byYear->num_rows > 0) {
     $byYearData = $byYear->fetch_object();
-    $res["year"] = "<strong>$byYearData->count $byYearData->title</strong> Job Postings from the Year <strong>$year</strong>";
+    if ($byYearData->title && $byYearData->count) {
+      $res["year"] = "<strong>$byYearData->count</strong> Candidate(s) for <strong> $byYearData->title</strong> Job Postings from the Year <strong>$year</strong>";
+    }
   }
 
   $byQuarterQ = "SELECT 
-                  j.title, 
-                  COUNT(j.title) AS 'count', 
-                  MAX(j.date_created) AS latest_date
-                FROM job j
-                WHERE j.date_created BETWEEN '$startSelectedQuarter' AND '$endSelectedQuarter'
-                  AND JSON_CONTAINS(j.industries, '$industry_id', '$')
-                  AND j.status <> 'inactive'
-                GROUP BY LOWER(j.title)
-                HAVING COUNT(j.title) = (
-                    SELECT MAX(count) FROM (
-                        SELECT 
-                          COUNT(j.title) AS count
-                        FROM job j
-                        WHERE j.date_created BETWEEN '$startSelectedQuarter' AND '$endSelectedQuarter'
-                          AND JSON_CONTAINS(j.industries, '$industry_id', '$')
-                          AND j.status <> 'inactive'
-                        GROUP BY LOWER(j.title)
-                    ) subquery
-                )
-                ORDER BY latest_date DESC LIMIT 1;";
+                    sq.title,
+                    SUM(sq.count) as 'count'
+                  FROM (
+                    SELECT 
+                          j.title,
+                          COUNT(j.title) as 'count'
+                      FROM candidates c
+                      LEFT JOIN job j
+                      ON j.id = c.job_id
+                      WHERE c.date_applied BETWEEN '$startSelectedQuarter' AND '$endSelectedQuarter'
+                      AND JSON_CONTAINS(j.industries, '$industry_id', '$')
+                      AND j.status <> 'inactive'
+                      GROUP BY j.title
+                  )sq";
 
   $byQuarter = $conn->query($byQuarterQ);
 
   if ($byQuarter->num_rows > 0) {
     $byQuarterData = $byQuarter->fetch_object();
-    if ($quarter == 5) {
-      $res["quarter"] = "<strong>$byQuarterData->count $byQuarterData->title</strong> Job Postings of <strong>$formattedQuarter</strong> <strong>$year</strong>";
-    } else {
-      $res["quarter"] = "<strong>$byQuarterData->count $byQuarterData->title</strong> Job Postings from <strong>$formattedQuarter</strong> of Year <strong>$year</strong>";
+    if ($byQuarterData->title && $byQuarterData->count) {
+      if ($quarter == 5) {
+        $res["quarter"] = "<strong>$byQuarterData->count</strong> Candidate(s) for <strong> $byQuarterData->title</strong> Job Postings of <strong>$formattedQuarter</strong> <strong>$year</strong>";
+      } else {
+        $res["quarter"] = "<strong>$byQuarterData->count</strong> Candidate(s) for <strong> $byQuarterData->title</strong> Job Postings from <strong>$formattedQuarter</strong> of Year <strong>$year</strong>";
+      }
     }
   }
 
